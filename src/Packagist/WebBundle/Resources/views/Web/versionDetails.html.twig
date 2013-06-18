@@ -16,7 +16,7 @@
     {% endfor %}
 </ul>
 <div class="clearfix package-links">
-    {% for type in ["require", "devRequire", "suggest", "provide", "conflict", "replace"] %}
+    {% for type in ["require", "devRequire", "suggest", "provide", "conflict", "replace", "usage"] %}
         <div class="{{ type }}s">
             <h2>{{ ('link_type.' ~ type)|trans }}</h2>
             {% if attribute(version, type)|length %}

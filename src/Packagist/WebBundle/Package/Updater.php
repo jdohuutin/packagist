@@ -20,6 +20,7 @@ use Composer\Util\ErrorHandler;
 use Packagist\WebBundle\Entity\Author;
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\Tag;
+use Packagist\WebBundle\Entity\UsageLink;
 use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Entity\SuggestLink;
 use Symfony\Bridge\Doctrine\RegistryInterface;
@@ -360,6 +361,44 @@ class Updater
                 $em->remove($link);
             }
             $version->getSuggest()->clear();
+        }
+
+        // handle usages
+        $requireRepository = $this->doctrine->getRepository('PackagistWebBundle:RequireLink');
+        $requireData = $requireRepository->findBy(array(
+            'packageName'    => $package->getName(),
+            'packageVersion' => $version->getVersion(),
+        ));
+        if ($requireData) {
+            foreach ($version->getUsage() as $link) {
+                // Filtered data with existing link
+                $existingRequireLink = $requireData->filter(function($requireLink) use ($link) {
+                    $requireVersion = $requireLink->getVersion();
+                    return $requireVersion->getPackage()->getName() == $link->getPackageName() &&
+                           $requireVersion->getVersion() == $link->getPackageVersion();
+                });
+                // Clear links that have changed/disappeared
+                if (count($existingRequireLink) == 0) {
+                    $version->getUsage()->removeElement($link);
+                    $em->remove($link);
+                } else {
+                    // clear those that are already set
+                    foreach ($existingRequireLink as $requireLink) {
+                        $requireData->removeElement($requireLink);
+                    }
+                }
+            }
+
+            foreach ($requireData as $requireLink) {
+                /** @var Version $version */
+                $requireVersion = $requireLink->getVersion();
+                $link = new UsageLink();
+                $link->setPackageName($requireVersion->getPackage()->getName());
+                $link->setPackageVersion($requireVersion->getVersion());
+                $version->addUsageLink($link);
+                $link->setVersion($version);
+                $em->persist($link);
+            }
         }
 
         if (!$package->getVersions()->contains($version)) {

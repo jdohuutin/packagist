@@ -148,6 +148,11 @@ class Version
     private $suggest;
 
     /**
+     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\UsageLink", mappedBy="version")
+     */
+    private $usage;
+
+    /**
      * @ORM\Column(type="text", nullable=true)
      */
     private $source;
@@ -201,6 +206,7 @@ class Version
         $this->provide = new ArrayCollection();
         $this->devRequire = new ArrayCollection();
         $this->suggest = new ArrayCollection();
+        $this->usage = new ArrayCollection();
         $this->authors = new ArrayCollection();
         $this->createdAt = new \DateTime;
         $this->updatedAt = new \DateTime;
@@ -259,6 +265,7 @@ class Version
             'conflict'   => 'conflict',
             'provide'    => 'provide',
             'replace'    => 'replace',
+            'usage'      => 'usage',
         );
 
         foreach ($supportedLinkTypes as $method => $linkType) {
@@ -878,6 +885,26 @@ class Version
     public function getSuggest()
     {
         return $this->suggest;
+    }
+
+    /**
+     * Add usage
+     *
+     * @param \Packagist\WebBundle\Entity\UsageLink $usage
+     */
+    public function addUsageLink(UsageLink $usage)
+    {
+        $this->usage[] = $usage;
+    }
+
+    /**
+     * Get usage
+     *
+     * @return \Doctrine\Common\Collections\ArrayCollection
+     */
+    public function getUsage()
+    {
+        return $this->usage;
     }
 
     /**

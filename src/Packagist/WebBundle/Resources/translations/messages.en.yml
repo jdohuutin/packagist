@@ -19,3 +19,4 @@ link_type:
     conflict: Conflicts
     replace: Replaces
     provide: Provides
+    usage: Usages
